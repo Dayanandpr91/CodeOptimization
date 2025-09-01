@@ -13,6 +13,10 @@
         Console.WriteLine($"Random password: {GeneratePassword(12)}");
         Console.WriteLine($"Age for DOB 1990-08-28: {CalculateAge(new DateTime(1990, 8, 28))}");
 
+        // Pause to allow profiling
+        Console.WriteLine("Press any key to exit...");
+        Console.ReadKey();
+
         string Greet(string name) => $"Hello, {name}! Welcome to C# 10.";
 
         string CheckEvenOdd(int number) => number switch
