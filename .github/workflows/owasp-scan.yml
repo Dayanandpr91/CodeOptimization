@@ -33,7 +33,7 @@ jobs:
 
       - name: Run Dependency-Check
         run: |
-          dependency-check/bin/dependency-check.bat --project "CodeOptimization" --scan . --format HTML --out report --nvdApiKey $env:NVD_API_KEY --nvdApiDelay 6000 --data ~/.dependency-check
+          dependency-check/bin/dependency-check.bat --project "CodeOptimization" --scan . --format HTML --out report --nvdApiKey $env:NVD_API_KEY --nvdApiDelay 10000 --data ~/.dependency-check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
