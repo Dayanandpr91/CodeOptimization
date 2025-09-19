@@ -11,13 +11,13 @@
         Console.WriteLine($"Reversed 'hello': {ReverseString("hello")}");
         Console.WriteLine($"Is 2024 a leap year? {IsLeapYear(2024)}");
         Console.WriteLine($"Random password: {GeneratePassword(12)}");
-        Console.WriteLine($"Age for DOB 1990-08-28: {CalculateAge(new DateTime(1990, 8, 28))}");
+        Console.WriteLine($"Age for DOB 1991-06-01: {CalculateAge(new DateTime(1991, 6, 1))}");
 
         // Pause to allow profiling
         Console.WriteLine("Press any key to exit...");
         Console.ReadKey();
 
-        string Greet(string name) => $"Hello, {name}! Welcome to C# 10.";
+        string Greet(string name) => $"Hello, {name}! Welcome to C# World.";
 
         string CheckEvenOdd(int number) => number switch
         {
