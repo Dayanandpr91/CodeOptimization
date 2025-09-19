@@ -20,10 +20,10 @@ jobs:
           distribution: 'temurin'
 
       - name: Download OWASP Dependency-Check
-      run: |
-        curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
-        tar -xf dc.zip
-        if (Test-Path "dependency-check-9.0.9") { Rename-Item "dependency-check-9.0.9" "dependency-check" }
+        run: |
+          curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
+          tar -xf dc.zip
+          if (Test-Path "dependency-check-9.0.9") { Rename-Item "dependency-check-9.0.9" "dependency-check" }
 
       - name: Run Dependency-Check
         run: |
