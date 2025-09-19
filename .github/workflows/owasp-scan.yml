@@ -19,6 +19,12 @@ jobs:
           java-version: '17'
           distribution: 'temurin'
 
+      - name: Cache Dependency-Check Data
+        uses: actions/cache@v3
+        with:
+          path: ~/.dependency-check
+          key: ${{ runner.os }}-dependency-check
+
       - name: Download OWASP Dependency-Check
         run: |
           curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
@@ -27,7 +33,7 @@ jobs:
 
       - name: Run Dependency-Check
         run: |
-          dependency-check/bin/dependency-check.bat --project "CodeOptimization" --scan . --format HTML --out report --nvdApiKey $env:NVD_API_KEY --nvdApiDelay 6000
+          dependency-check/bin/dependency-check.bat --project "CodeOptimization" --scan . --format HTML --out report --nvdApiKey $env:NVD_API_KEY --nvdApiDelay 6000 --data ~/.dependency-check
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
