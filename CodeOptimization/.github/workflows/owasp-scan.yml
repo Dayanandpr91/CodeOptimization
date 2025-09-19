@@ -1,0 +1,36 @@
+name: OWASP Dependency Check
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  dependency-check:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java (required for Dependency-Check)
+        uses: actions/setup-java@v3
+        with:
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Download OWASP Dependency-Check
+        run: |
+          curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
+          tar -xf dc.zip
+          ren dependency-check* dependency-check
+
+      - name: Run Dependency-Check
+        run: |
+          dependency-check/bin/dependency-check.bat --project "CodeOptimization" --scan . --format HTML --out report
+
+      - name: Upload Report Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: owasp-report
+          path: report/dependency-check-report.html
