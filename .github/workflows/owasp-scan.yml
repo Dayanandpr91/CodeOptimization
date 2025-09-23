@@ -23,15 +23,24 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          path: './'
+          # 👇 scan only project folder, not entire repo
+          path: './CodeOptimization'
           format: 'ALL'
           out: 'dependency-check-report'
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --disableOssIndex
+            --enableExperimental
+            --log dependency-check.log
 
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
           path: dependency-check-report/
+
+      - name: Upload Dependency-Check Logs
+        uses: actions/upload-artifact@v4
+        with:
+          name: dependency-check-logs
+          path: dependency-check.log
