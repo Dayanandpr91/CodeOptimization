@@ -20,7 +20,7 @@ jobs:
           dotnet-version: 8.0.x
 
       - name: Restore .NET Dependencies
-        run: dotnet restore CodeOptimization.sln
+        run: dotnet restore CodeOptimization/CodeOptimization.sln
 
       - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
