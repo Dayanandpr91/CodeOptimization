@@ -26,21 +26,23 @@ jobs:
           key: ${{ runner.os }}-dependency-check
 
       - name: Download OWASP Dependency-Check
+        shell: pwsh
         run: |
           curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
           tar -xf dc.zip
           if (Test-Path "dependency-check-9.0.9") { Rename-Item "dependency-check-9.0.9" "dependency-check" }
 
       - name: Run Dependency-Check
+        shell: cmd
         run: |
-          dependency-check/bin/dependency-check.bat ^
+          dependency-check\bin\dependency-check.bat ^
             --project "CodeOptimization" ^
             --scan . ^
             --format HTML ^
             --out report ^
-            --nvdApiKey $env:NVD_API_KEY ^
+            --nvdApiKey %NVD_API_KEY% ^
             --nvdApiDelay 6000 ^
-            --data "$env:USERPROFILE/.dependency-check"
+            --data "%USERPROFILE%\.dependency-check"
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
