@@ -17,38 +17,58 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js (if using npm)
+      # Restore .NET dependencies
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: '8.0.x'
+
+      - name: Restore .NET packages
+        run: dotnet restore
+
+      # Optional: Install Node.js / Python / Maven if project has them
+      - name: Set up Node.js (optional)
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      - name: Install dependencies
+      - name: Install Node.js dependencies
         run: |
           if [ -f package.json ]; then
             npm install
           fi
+
+      - name: Install Python dependencies (optional)
+        run: |
           if [ -f requirements.txt ]; then
             pip install -r requirements.txt
           fi
+
+      - name: Install Maven dependencies (optional)
+        run: |
           if [ -f pom.xml ]; then
             mvn install -DskipTests
           fi
 
-      - name: Run GitHub Security Advisory Scan
-        run: |
-          echo "Checking for Dependabot alerts via GitHub API..."
-          curl -s -H "Accept: application/vnd.github+json" \
-               -H "Authorization: Bearer ${{ secrets.GH_PAT }}" \
-               https://api.github.com/repos/${{ github.repository }}/vulnerability-alerts \
-               > vulnerability_report.json
+      # Run OWASP Dependency-Check
+      - name: Run Dependency-Check
+        uses: dependency-check-action@v2
+        with:
+          project: MyCSharpApp
+          scan: .
+          format: "JSON"
+          out: "dependency-check-report"
+          enableExperimental: true
+          nvdApiKey: ${{ secrets.NVD_API_KEY }} # optional if you have a free NVD key
 
+      # Upload the vulnerability report
       - name: Upload Vulnerability Report
         uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
-          path: vulnerability_report.json
+          path: dependency-check-report/dependency-check-report.json
 
       - name: Print summary
         run: |
           echo "Vulnerability scan completed."
-          echo "Check the uploaded artifact: vulnerability_report.json"
+          echo "Check the uploaded artifact: dependency-check-report/dependency-check-report.json"
