@@ -14,32 +14,52 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      # Step 1: Checkout the repository
       - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up .NET
-        uses: actions/setup-dotnet@v3
-        with:
-          dotnet-version: '8.0.x'
-
+      # Step 2: Restore .NET packages
       - name: Restore .NET packages
-        run: dotnet restore
+        run: dotnet restore CodeOptimization/CodeOptimization.csproj
 
-      - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
+      # Step 3: Set up Node.js if needed
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
         with:
-          project: MyCSharpApp
-          scan: .
-          format: "JSON"
-          out: "dependency-check-report"
+          node-version: '18'
 
+      # Step 4: Install other dependencies
+      - name: Install other dependencies
+        run: |
+          if [ -f package.json ]; then
+            npm install
+          fi
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          if [ -f pom.xml ]; then
+            mvn install -DskipTests
+          fi
+
+      # Step 5: Run OWASP Dependency-Check
+      - name: Run OWASP Dependency-Check
+        uses: dependency-check/dependency-check-action@v3
+        with:
+          project: CodeOptimization
+          scan: CodeOptimization
+          format: 'ALL'
+          out: 'dependency-check-report'
+          fail-on CVSS: '7' # optional, fails workflow for high severity vulnerabilities
+
+      # Step 6: Upload the Dependency-Check report
       - name: Upload Vulnerability Report
         uses: actions/upload-artifact@v4
         with:
           name: vulnerability-report
-          path: dependency-check-report/dependency-check-report.json
+          path: dependency-check-report
 
+      # Step 7: Print summary
       - name: Print summary
         run: |
           echo "Vulnerability scan completed."
-          echo "Check the uploaded artifact: dependency-check-report/dependency-check-report.json"
+          echo "Check the uploaded artifact: dependency-check-report"
