@@ -1,4 +1,4 @@
-name: Scan Dependencies for Vulnerabilities
+name: Dependency Check Scan
 
 on:
   push:
@@ -14,26 +14,21 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup .NET 8
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
-
-      - name: Setup Node
-        uses: actions/setup-node@v3
-        with:
-          node-version: 20.x
 
       - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          path: './'                         # directory to scan
-          format: 'ALL'                      # report formats: HTML, XML, JSON, CSV
+          path: './'
+          format: 'ALL'
           out: 'dependency-check-report'
-          args: '--nvdApiKey ${{ secrets.NVD_API_KEY }} --ossindexUser ${{ secrets.OSS_INDEX_USER }} --ossindexPassword ${{ secrets.OSS_INDEX_PASSWORD }}'
+          args: '--nvdApiKey ${{ secrets.NVD_API_KEY }} --noupdate'
 
-      - name: Upload Dependency-Check Reports
+      - name: Upload Reports
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
