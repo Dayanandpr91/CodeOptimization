@@ -22,7 +22,7 @@ jobs:
       - name: Cache Dependency-Check Data
         uses: actions/cache@v3
         with:
-          path: ~/.dependency-check
+          path: ${{ runner.temp }}\dependency-check
           key: ${{ runner.os }}-dependency-check
 
       - name: Download OWASP Dependency-Check
@@ -42,7 +42,7 @@ jobs:
             --out report ^
             --nvdApiKey %NVD_API_KEY% ^
             --nvdApiDelay 6000 ^
-            --data "%USERPROFILE%\.dependency-check"
+            --data "%RUNNER_TEMP%\dependency-check"
         env:
           NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
 
