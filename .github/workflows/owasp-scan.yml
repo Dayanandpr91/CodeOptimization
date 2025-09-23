@@ -1,74 +1,48 @@
-name: Dependency Vulnerability Scan
+name: Scan Dependencies for Vulnerabilities
 
 on:
-  pull_request:
-    types: [opened, synchronize]
   push:
-    branches:
-      - main
-      - 'release/**'
+    branches: [main]
+  pull_request:
+    branches: [main]
 
 jobs:
-  scan:
-    name: Scan Dependencies for Vulnerabilities
-    runs-on: ubuntu-latest
+  dependency-scan:
+    runs-on: ubuntu-24.04
 
     steps:
-      # Step 1: Checkout the repository
-      - name: Checkout repository
+      # Checkout the repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 1
 
-      # Step 2: Set up .NET SDK
-      - name: Set up .NET SDK
+      # Setup .NET
+      - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
-          dotnet-version: '8.0.x'
+          dotnet-version: 8.0.x
 
-      # Step 3: Restore .NET packages
-      - name: Restore .NET packages
-        run: dotnet restore CodeOptimization/CodeOptimization.csproj
-
-      # Step 4: Set up Node.js (if needed)
-      - name: Set up Node.js
+      # Setup Node
+      - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: 20.x
 
-      # Step 5: Install other dependencies
-      - name: Install other dependencies
-        run: |
-          if [ -f package.json ]; then
-            npm install
-          fi
-          if [ -f requirements.txt ]; then
-            pip install -r requirements.txt
-          fi
-          if [ -f pom.xml ]; then
-            mvn install -DskipTests
-          fi
-
-      # Step 6: Run OWASP Dependency-Check
-      - name: Run OWASP Dependency-Check
+      # Run OWASP Dependency Check
+      - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: CodeOptimization
-          path: CodeOptimization
-          format: 'ALL'
-          out: 'dependency-check-report'
-          args: >
-            --failOnCVSS 7
-            --ossindexUser ${{ secrets.OSSINDEX_USERNAME }}
-            --ossindexPassword ${{ secrets.OSSINDEX_TOKEN }}
+          scan: './'                        # directory to scan
+          project: 'CodeOptimization'       # project name
+          format: 'ALL'                     # report formats: HTML, XML, JSON, CSV
+          out: 'dependency-check-report'    # output folder
+          fail-on-error: 'true'             # fail workflow on CVEs
+          nvd-api-key: ${{ secrets.NVD_API_KEY }}
 
-      # Step 7: Upload the Dependency-Check report
-      - name: Upload Vulnerability Report
+      # Upload Dependency Check Reports
+      - name: Upload Dependency-Check Reports
         uses: actions/upload-artifact@v4
         with:
-          name: vulnerability-report
+          name: dependency-check-report
           path: dependency-check-report
-
-      # Step 8: Print summary
-      - name: Print summary
-        run: |
-          echo "Vulnerability scan completed."
-          echo "Check the uploaded artifact: dependency-check-report"
