@@ -1,29 +1,44 @@
-name: OWASP Dependency-Check
+name: OWASP Dependency Check
+
 on:
   push:
     branches:
       - main
   pull_request:
- 
+
 jobs:
   dependency-check:
-    runs-on: ubuntu-latest
+    runs-on: windows-latest
     steps:
-      - name: Checkout Code
-        uses: actions/checkout@v4
- 
-      - name: Run OWASP Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        id: dep-check
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      - name: Setup Java (required for Dependency-Check)
+        uses: actions/setup-java@v3
         with:
-          project: 'CodeOptimization'
-          path: '.'
-          format: 'JSON'
-          out: 'reports'
-          args: '--scan'
- 
-      - name: Upload Report as Artifact
+          java-version: '17'
+          distribution: 'temurin'
+
+      - name: Cache Dependency-Check Data
+        uses: actions/cache@v3
+        with:
+          path: ~/.dependency-check
+          key: ${{ runner.os }}-dependency-check
+
+      - name: Download OWASP Dependency-Check
+        run: |
+          curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
+          tar -xf dc.zip
+          if (Test-Path "dependency-check-9.0.9") { Rename-Item "dependency-check-9.0.9" "dependency-check" }
+
+      - name: Run Dependency-Check
+        run: |
+          dependency-check/bin/dependency-check.bat --project "CodeOptimization" --scan . --format HTML --out report --nvdApiKey $env:NVD_API_KEY --nvdApiDelay 10000 --data "$env:USERPROFILE/.dependency-check"
+        env:
+          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+
+      - name: Upload Report Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-check-report
-          path: reports/dependency-check-report.json
+          name: owasp-report
+          path: report/dependency-check-report.html
