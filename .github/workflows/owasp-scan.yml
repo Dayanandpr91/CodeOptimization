@@ -23,23 +23,20 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          path: './CodeOptimization'
-          format: 'HTML' # 👈 only HTML report
+          path: './'
+          format: 'ALL'
           out: 'dependency-check-report'
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --disableOssIndex
-            --enableExperimental
-            --log dependency-check.log
 
-      - name: Upload HTML Report
+      # ✅ Copy only the HTML file to root for uploading
+      - name: Prepare HTML report
+        run: cp dependency-check-report/dependency-check-report.html dependency-check-report.html
+
+      # ✅ Upload just the HTML report
+      - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v4
         with:
-          name: dependency-check-report-html
-          path: dependency-check-report/dependency-check-report.html
-
-      - name: Upload Dependency-Check Logs
-        uses: actions/upload-artifact@v4
-        with:
-          name: dependency-check-logs
-          path: dependency-check.log
+          name: dependency-check-report
+          path: dependency-check-report.html
