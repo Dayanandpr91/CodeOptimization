@@ -11,36 +11,28 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      # Checkout the repository
       - name: Checkout Repository
         uses: actions/checkout@v3
-        with:
-          fetch-depth: 1
 
-      # Setup .NET
       - name: Setup .NET 8
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      # Setup Node
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
           node-version: 20.x
 
-      # Run OWASP Dependency Check
       - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          scan: './'                        # directory to scan
-          project: 'CodeOptimization'       # project name
-          format: 'ALL'                     # report formats: HTML, XML, JSON, CSV
-          out: 'dependency-check-report'    # output folder
-          fail-on-error: 'true'             # fail workflow on CVEs
-          nvd-api-key: ${{ secrets.NVD_API_KEY }}
+          project: 'CodeOptimization'
+          path: './'                         # directory to scan
+          format: 'ALL'                      # report formats: HTML, XML, JSON, CSV
+          out: 'dependency-check-report'
+          args: '--nvdApiKey ${{ secrets.NVD_API_KEY }} --ossindexUser ${{ secrets.OSS_INDEX_USER }} --ossindexPassword ${{ secrets.OSS_INDEX_PASSWORD }}'
 
-      # Upload Dependency Check Reports
       - name: Upload Dependency-Check Reports
         uses: actions/upload-artifact@v4
         with:
