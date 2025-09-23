@@ -19,6 +19,9 @@ jobs:
         with:
           dotnet-version: 8.0.x
 
+      - name: Restore .NET Dependencies
+        run: dotnet restore CodeOptimization.sln
+
       - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
@@ -30,13 +33,8 @@ jobs:
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --disableOssIndex
 
-      # ✅ Copy only the HTML file to root for uploading
-      - name: Prepare HTML report
-        run: cp dependency-check-report/dependency-check-report.html dependency-check-report.html
-
-      # ✅ Upload just the HTML report
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
-          path: dependency-check-report.html
+          path: dependency-check-report/
