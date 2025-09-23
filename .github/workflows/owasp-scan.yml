@@ -1,7 +1,9 @@
 name: OWASP Dependency-Check
 on:
-  workflow_dispatch:
-    # This allows the n8n workflow to trigger this manually
+  push:
+    branches:
+      - main
+  pull_request:
  
 jobs:
   dependency-check:
@@ -14,7 +16,7 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         id: dep-check
         with:
-          project: 'My-Project'
+          project: 'CodeOptimization'
           path: '.'
           format: 'JSON'
           out: 'reports'
