@@ -1,23 +1,20 @@
-name: Dependency Scan
+name: Dependency Check Scan
 
 on:
   push:
-    branches:
-      - main
+    branches: [main]
   pull_request:
-    branches:
-      - main
+    branches: [main]
 
 jobs:
   dependency-scan:
-    name: Run Dependency-Check
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
 
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      - name: Setup .NET SDK
+      - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
@@ -25,17 +22,17 @@ jobs:
       - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
-          project: CodeOptimization
-          path: ./                  # Folder to scan
-          format: ALL               # Generates HTML, XML, JSON, CSV reports
-          out: dependency-check-report
+          project: 'CodeOptimization'
+          path: './'
+          format: 'ALL'
+          out: 'dependency-check-report'
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --noupdate
             --disableOssIndex
 
       - name: Upload Dependency-Check Report
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: dependency-check-report
           path: dependency-check-report/
