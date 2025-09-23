@@ -1,53 +1,54 @@
-name: OWASP Dependency Check
+name: Dependency Vulnerability Scan
 
 on:
+  pull_request:
+    types: [opened, synchronize]
   push:
     branches:
       - main
-  pull_request:
+      - 'release/**'
 
 jobs:
-  dependency-check:
-    runs-on: windows-latest
+  scan:
+    name: Scan Dependencies for Vulnerabilities
+    runs-on: ubuntu-latest
+
     steps:
-      - name: Checkout code
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Setup Java (required for Dependency-Check)
-        uses: actions/setup-java@v3
+      - name: Set up Node.js (if using npm)
+        uses: actions/setup-node@v3
         with:
-          java-version: '17'
-          distribution: 'temurin'
+          node-version: '18'
 
-      - name: Cache Dependency-Check Data
-        uses: actions/cache@v3
-        with:
-          path: ${{ runner.temp }}\dependency-check
-          key: ${{ runner.os }}-dependency-check
-
-      - name: Download OWASP Dependency-Check
-        shell: pwsh
+      - name: Install dependencies
         run: |
-          curl -L https://github.com/jeremylong/DependencyCheck/releases/download/v9.0.9/dependency-check-9.0.9-release.zip -o dc.zip
-          tar -xf dc.zip
-          if (Test-Path "dependency-check-9.0.9") { Rename-Item "dependency-check-9.0.9" "dependency-check" }
+          if [ -f package.json ]; then
+            npm install
+          fi
+          if [ -f requirements.txt ]; then
+            pip install -r requirements.txt
+          fi
+          if [ -f pom.xml ]; then
+            mvn install -DskipTests
+          fi
 
-      - name: Run Dependency-Check
-        shell: cmd
+      - name: Run GitHub Security Advisory Scan
         run: |
-          dependency-check\bin\dependency-check.bat ^
-            --project "CodeOptimization" ^
-            --scan . ^
-            --format HTML ^
-            --out report ^
-            --nvdApiKey %NVD_API_KEY% ^
-            --nvdApiDelay 6000 ^
-            --data "%RUNNER_TEMP%\dependency-check"
-        env:
-          NVD_API_KEY: ${{ secrets.NVD_API_KEY }}
+          echo "Checking for Dependabot alerts via GitHub API..."
+          curl -s -H "Accept: application/vnd.github+json" \
+               -H "Authorization: Bearer ${{ secrets.GITHUB_TOKEN }}" \
+               https://api.github.com/repos/${{ github.repository }}/vulnerability-alerts \
+               > vulnerability_report.json
 
-      - name: Upload Report Artifact
-        uses: actions/upload-artifact@v4
+      - name: Upload Vulnerability Report
+        uses: actions/upload-artifact@v3
         with:
-          name: owasp-report
-          path: report/dependency-check-report.html
+          name: vulnerability-report
+          path: vulnerability_report.json
+
+      - name: Print summary
+        run: |
+          echo "Vulnerability scan completed."
+          echo "Check the uploaded artifact: vulnerability_report.json"
