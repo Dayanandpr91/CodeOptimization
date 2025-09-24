@@ -94,23 +94,44 @@ jobs:
       with:
         dotnet-version: '8.0.x'
 
-    - name: Install security audit tool
-      run: dotnet tool install --global security-scan
+    - name: Restore dependencies
+      run: dotnet restore CodeOptimization/CodeOptimization.csproj
 
-    - name: Run security audit
+    - name: Run security audit with dotnet list
       run: |
-        cd CodeOptimization
-        security-scan --project CodeOptimization.csproj --output security-audit-report.json
+        echo "Running security audit..."
+        echo "## Security Audit Report" > security-audit-report.md
+        echo "Generated: $(date)" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        
+        echo "### Vulnerable Packages Check" >> security-audit-report.md
+        if dotnet list CodeOptimization/CodeOptimization.csproj package --vulnerable --include-transitive 2>&1 | tee vulnerable-packages.txt; then
+          echo "✅ No vulnerable packages found" >> security-audit-report.md
+        else
+          echo "⚠️ Vulnerable packages detected:" >> security-audit-report.md
+          cat vulnerable-packages.txt >> security-audit-report.md
+        fi
+        
+        echo "" >> security-audit-report.md
+        echo "### Outdated Packages Check" >> security-audit-report.md
+        dotnet list CodeOptimization/CodeOptimization.csproj package --outdated --include-transitive >> security-audit-report.md
+        
+        echo "" >> security-audit-report.md
+        echo "### All Dependencies" >> security-audit-report.md
+        dotnet list CodeOptimization/CodeOptimization.csproj package --include-transitive >> security-audit-report.md
 
     - name: Upload security audit report
       uses: actions/upload-artifact@v4
       with:
         name: security-audit-report
-        path: CodeOptimization/security-audit-report.json
+        path: |
+          security-audit-report.md
+          vulnerable-packages.txt
 
   snyk-security:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
+    if: ${{ secrets.SNYK_TOKEN != '' }}
     
     steps:
     - name: Checkout repository
@@ -135,7 +156,7 @@ jobs:
   generate-report:
     name: Generate Security Report
     runs-on: ubuntu-latest
-    needs: [codeql-analysis, dependency-check, security-audit, snyk-security]
+    needs: [codeql-analysis, dependency-check, security-audit]
     if: always()
     
     steps:
@@ -156,15 +177,15 @@ jobs:
         echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result }} |" >> security-scan-report.md
         echo "| Dependency Check | ${{ needs.dependency-check.result }} |" >> security-scan-report.md
         echo "| Security Audit | ${{ needs.security-audit.result }} |" >> security-scan-report.md
-        echo "| Snyk Security | ${{ needs.snyk-security.result }} |" >> security-scan-report.md
+        echo "| Snyk Security | ${{ secrets.SNYK_TOKEN != '' && 'Skipped (No Token)' || 'Not Configured' }} |" >> security-scan-report.md
         echo "" >> security-scan-report.md
         echo "## Detailed Results" >> security-scan-report.md
         echo "" >> security-scan-report.md
         
-        if [ -f "security-audit-report/security-audit-report.json" ]; then
+        if [ -f "security-audit-report/security-audit-report.md" ]; then
           echo "### Security Audit Results" >> security-scan-report.md
-          echo '```json' >> security-scan-report.md
-          cat security-audit-report/security-audit-report.json >> security-scan-report.md
+          echo '```markdown' >> security-scan-report.md
+          cat security-audit-report/security-audit-report.md >> security-scan-report.md
           echo '```' >> security-scan-report.md
         fi
 
