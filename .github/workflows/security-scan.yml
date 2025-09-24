@@ -326,8 +326,8 @@ jobs:
         password: ${{ secrets.EMAIL_PASSWORD }}
         subject: "🔒 Security Vulnerability Alert - ${{ github.repository }}"
         to: ${{ secrets.CODE_OWNER_EMAIL }}
-        from: ${{ secrets.EMAIL_USERNAME }}
-        body: |
+        from: Dayanand.pr@utthunga.com
+        html_body: |
           <html>
           <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333;">
             <div style="max-width: 800px; margin: 0 auto; padding: 20px;">
@@ -438,4 +438,3 @@ jobs:
             </div>
           </body>
           </html>
-        content_type: text/html
