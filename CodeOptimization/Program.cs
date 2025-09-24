@@ -2,7 +2,7 @@
 {
     private static void Main(string[] args)
     {
-        Console.WriteLine(Greet("Dayanand"));
+        Console.WriteLine(Greet("Hello"));
         Console.WriteLine(CheckEvenOdd(7));
         Console.WriteLine($"Factorial of 5: {Factorial(5)}");
         Console.WriteLine($"Sunday is a {GetDayType(DayOfWeek.Sunday)}");
