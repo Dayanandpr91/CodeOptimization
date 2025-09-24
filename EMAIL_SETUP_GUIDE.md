@@ -19,9 +19,8 @@ You need to add the following secrets to your GitHub repository:
 
 #### **Required Secrets:**
 
-1. **EMAIL_USERNAME** - Your email address (sender)
-2. **EMAIL_PASSWORD** - Your email app password (not your regular password)
-3. **CODE_OWNER_EMAIL** - Email address of the code owner/team lead
+1. **EMAIL_USERNAME** - Your corporate email address (Dayanand.pr@utthunga.com)
+2. **EMAIL_PASSWORD** - Your corporate email password
 
 #### **How to Add Secrets:**
 
@@ -33,18 +32,25 @@ You need to add the following secrets to your GitHub repository:
 
 ### 2. Email Provider Setup
 
-#### **For Gmail (Recommended):**
+#### **For Microsoft Corporate Email (Outlook/Office 365):**
 
-1. **Enable 2-Factor Authentication** on your Gmail account
-2. **Generate App Password:**
-   - Go to Google Account settings
-   - Security → 2-Step Verification → App passwords
-   - Generate a new app password for "Mail"
-   - Use this app password (not your regular password) for `EMAIL_PASSWORD`
+The workflow is configured for Microsoft corporate email (Outlook/Office 365) with these settings:
+
+```yaml
+server_address: smtp-mail.outlook.com
+server_port: 587
+secure: false
+```
+
+**Your Configuration:**
+- **Email:** Dayanand.pr@utthunga.com
+- **Password:** WelcomeUtt@1234#$12
+- **SMTP Server:** smtp-mail.outlook.com
+- **Port:** 587 (TLS)
 
 #### **For Other Email Providers:**
 
-The workflow is configured for Gmail by default. For other providers, update these settings in the workflow:
+If you need to use a different email provider, update these settings in the workflow:
 
 ```yaml
 server_address: smtp.your-provider.com
@@ -52,7 +58,7 @@ server_port: 587  # or 465 for SSL
 ```
 
 **Common SMTP Settings:**
-- **Outlook/Hotmail:** smtp-mail.outlook.com:587
+- **Gmail:** smtp.gmail.com:587
 - **Yahoo:** smtp.mail.yahoo.com:587
 - **Custom SMTP:** Your organization's SMTP server
 
@@ -109,9 +115,9 @@ The email is sent in professional HTML format with:
 ## 🔒 Security Considerations
 
 ### **Email Security:**
-- Use app passwords, not regular passwords
+- Use your corporate email credentials
 - Consider using a dedicated email account for notifications
-- Regularly rotate app passwords
+- Regularly rotate passwords as per corporate policy
 - Monitor email access logs
 
 ### **Repository Security:**
@@ -130,9 +136,9 @@ The email is sent in professional HTML format with:
    - Check GitHub Actions logs for error messages
 
 2. **Authentication failed:**
-   - Ensure 2FA is enabled on email account
-   - Use app password, not regular password
-   - Check SMTP server settings
+   - Verify corporate email credentials are correct
+   - Check if corporate firewall allows SMTP connections
+   - Verify SMTP server settings
 
 3. **Email going to spam:**
    - Add sender email to contacts
