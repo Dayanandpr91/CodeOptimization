@@ -1,0 +1,102 @@
+# Security Configuration for Automated Vulnerability Analysis
+
+# CodeQL Configuration
+codeql:
+  languages:
+    - csharp
+  queries:
+    - security-and-quality
+    - security-extended
+  severity-threshold: medium
+
+# Dependency Scanning Configuration
+dependency-scanning:
+  enabled: true
+  check-transitive: true
+  fail-on-vulnerability: true
+  severity-threshold: medium
+  exclude-packages:
+    - "Microsoft.NETCore.App"
+    - "Microsoft.AspNetCore.App"
+
+# Security Audit Configuration
+security-audit:
+  enabled: true
+  check-types:
+    - vulnerabilities
+    - outdated-packages
+    - license-compliance
+  fail-on-high-severity: true
+
+# Snyk Configuration
+snyk:
+  enabled: true
+  severity-threshold: high
+  fail-on-issues: false
+  monitor: true
+  project-name: "CodeOptimization"
+
+# Notification Configuration
+notifications:
+  email:
+    enabled: false
+    recipients: []
+  slack:
+    enabled: false
+    webhook-url: ""
+  github:
+    enabled: true
+    comment-on-pr: true
+    create-issues: true
+
+# Report Configuration
+reporting:
+  formats:
+    - markdown
+    - json
+    - html
+  include-details: true
+  include-recommendations: true
+  save-artifacts: true
+
+# Schedule Configuration
+schedule:
+  daily-scan: true
+  weekly-report: true
+  on-push: true
+  on-pr: true
+
+# Custom Security Rules
+custom-rules:
+  - name: "Weak Random Number Generation"
+    pattern: "new Random\\(\\)"
+    severity: high
+    message: "Use RandomNumberGenerator for cryptographic purposes"
+    
+  - name: "Hardcoded Secrets"
+    pattern: "(password|secret|key|token)\\s*=\\s*[\"'][^\"']+[\"']"
+    severity: high
+    message: "Avoid hardcoding secrets in source code"
+    
+  - name: "SQL Injection Risk"
+    pattern: "string\\.Format.*SELECT|string\\.Concat.*SELECT"
+    severity: high
+    message: "Use parameterized queries to prevent SQL injection"
+    
+  - name: "Missing Input Validation"
+    pattern: "public.*\\(.*string\\s+\\w+.*\\)"
+    severity: medium
+    message: "Add input validation for string parameters"
+
+# Exclusions
+exclusions:
+  files:
+    - "**/*.generated.cs"
+    - "**/bin/**"
+    - "**/obj/**"
+  directories:
+    - "packages"
+    - "node_modules"
+  patterns:
+    - "**/*.Designer.cs"
+    - "**/*.g.cs"
