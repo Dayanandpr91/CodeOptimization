@@ -25,15 +25,17 @@ jobs:
       - name: List NuGet Packages
         run: dotnet list CodeOptimization/CodeOptimization.csproj package
 
-      - name: Prepare report folder
-        run: mkdir -p dependency-check-report
+      # Copy the global NuGet cache into the workspace so dependency-check can see it
+      - name: Copy NuGet packages into workspace
+        run: |
+          mkdir -p ./nuget-packages
+          cp -r ~/.nuget/packages/* ./nuget-packages/ || true
 
-      - name: Run Dependency-Check on NuGet cache
+      - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          # IMPORTANT: use absolute path, not ~
-          path: '/home/runner/.nuget/packages'
+          path: './nuget-packages'
           format: 'ALL'
           out: 'dependency-check-report'
           args: >
