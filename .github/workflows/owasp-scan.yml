@@ -25,7 +25,6 @@ jobs:
       - name: List NuGet Packages
         run: dotnet list CodeOptimization/CodeOptimization.csproj package
 
-      # Copy the global NuGet cache into the workspace so dependency-check can scan it
       - name: Copy NuGet packages into workspace
         run: |
           mkdir -p ./nuget-packages
@@ -33,7 +32,6 @@ jobs:
           echo "NuGet packages copied:"
           ls -R ./nuget-packages | head -50
 
-      # Ensure output folder exists before running dependency-check
       - name: Prepare output folder
         run: mkdir -p dependency-check-report
 
@@ -41,16 +39,15 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          path: './nuget-packages'
+          scan: './nuget-packages'
           format: 'ALL'
-          out: 'dependency-check-report'
           args: >
+            --out dependency-check-report
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --enableExperimental
             --update
             --disableOssIndex
 
-      # Debugging: check what files were written
       - name: Debug report files
         run: |
           echo "Contents of dependency-check-report:"
