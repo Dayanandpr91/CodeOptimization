@@ -131,7 +131,6 @@ jobs:
   snyk-security:
     name: Snyk Security Scan
     runs-on: ubuntu-latest
-    if: ${{ secrets.SNYK_TOKEN != '' }}
     
     steps:
     - name: Checkout repository
@@ -145,7 +144,17 @@ jobs:
     - name: Restore dependencies
       run: dotnet restore CodeOptimization/CodeOptimization.csproj
 
+    - name: Check for Snyk token
+      id: check-snyk-token
+      run: |
+        if [ -n "${{ secrets.SNYK_TOKEN }}" ]; then
+          echo "snyk-token-exists=true" >> $GITHUB_OUTPUT
+        else
+          echo "snyk-token-exists=false" >> $GITHUB_OUTPUT
+        fi
+
     - name: Run Snyk to check for vulnerabilities
+      if: steps.check-snyk-token.outputs.snyk-token-exists == 'true'
       uses: snyk/actions/dotnet@master
       continue-on-error: true
       env:
@@ -153,10 +162,14 @@ jobs:
       with:
         args: --severity-threshold=high --file=CodeOptimization/CodeOptimization.csproj
 
+    - name: Skip Snyk (no token)
+      if: steps.check-snyk-token.outputs.snyk-token-exists == 'false'
+      run: echo "Skipping Snyk scan - no SNYK_TOKEN configured"
+
   generate-report:
     name: Generate Security Report
     runs-on: ubuntu-latest
-    needs: [codeql-analysis, dependency-check, security-audit]
+    needs: [codeql-analysis, dependency-check, security-audit, snyk-security]
     if: always()
     
     steps:
@@ -177,7 +190,7 @@ jobs:
         echo "| CodeQL Analysis | ${{ needs.codeql-analysis.result }} |" >> security-scan-report.md
         echo "| Dependency Check | ${{ needs.dependency-check.result }} |" >> security-scan-report.md
         echo "| Security Audit | ${{ needs.security-audit.result }} |" >> security-scan-report.md
-        echo "| Snyk Security | ${{ secrets.SNYK_TOKEN != '' && 'Skipped (No Token)' || 'Not Configured' }} |" >> security-scan-report.md
+        echo "| Snyk Security | ${{ needs.snyk-security.result || 'Skipped' }} |" >> security-scan-report.md
         echo "" >> security-scan-report.md
         echo "## Detailed Results" >> security-scan-report.md
         echo "" >> security-scan-report.md
