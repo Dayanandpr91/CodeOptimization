@@ -120,6 +120,100 @@ jobs:
         echo "### All Dependencies" >> security-audit-report.md
         dotnet list CodeOptimization/CodeOptimization.csproj package --include-transitive >> security-audit-report.md
 
+    - name: Custom Code Security Analysis
+      run: |
+        echo "" >> security-audit-report.md
+        echo "### Custom Code Security Analysis" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        
+        # Check for weak random number generation
+        echo "#### 🔴 Critical: Weak Random Number Generation" >> security-audit-report.md
+        if grep -r "new Random()" CodeOptimization/*.cs; then
+          echo "**ISSUE FOUND:** Weak random number generation detected" >> security-audit-report.md
+          echo "**Location:** \`new Random()\` usage in password generation" >> security-audit-report.md
+          echo "**Risk:** CRITICAL - Predictable random numbers" >> security-audit-report.md
+          echo "**Fix:** Replace with \`RandomNumberGenerator.GetInt32()\`" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        else
+          echo "✅ No weak random number generation found" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        fi
+        
+        # Check for hardcoded secrets
+        echo "#### 🟡 Medium: Hardcoded Values" >> security-audit-report.md
+        if grep -rE "(password|secret|key|token)\s*=\s*[\"'][^\"']+[\"']" CodeOptimization/*.cs; then
+          echo "**ISSUE FOUND:** Potential hardcoded secrets detected" >> security-audit-report.md
+          echo "**Risk:** MEDIUM - Hardcoded sensitive values" >> security-audit-report.md
+          echo "**Fix:** Move to configuration files or environment variables" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        else
+          echo "✅ No hardcoded secrets found" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        fi
+        
+        # Check for missing input validation
+        echo "#### 🟡 Medium: Missing Input Validation" >> security-audit-report.md
+        if grep -rE "public.*\(.*string\s+\w+.*\)" CodeOptimization/*.cs | grep -v "null" | grep -v "string\.IsNullOrEmpty"; then
+          echo "**ISSUE FOUND:** Missing input validation in public methods" >> security-audit-report.md
+          echo "**Risk:** MEDIUM - Potential null reference exceptions" >> security-audit-report.md
+          echo "**Fix:** Add null checks and input validation" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        else
+          echo "✅ Input validation appears adequate" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        fi
+        
+        # Check for SQL injection risks
+        echo "#### 🔴 High: SQL Injection Risks" >> security-audit-report.md
+        if grep -rE "string\.Format.*SELECT|string\.Concat.*SELECT" CodeOptimization/*.cs; then
+          echo "**ISSUE FOUND:** Potential SQL injection risk detected" >> security-audit-report.md
+          echo "**Risk:** HIGH - SQL injection vulnerability" >> security-audit-report.md
+          echo "**Fix:** Use parameterized queries" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        else
+          echo "✅ No SQL injection risks found" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        fi
+
+    - name: Manual Dependency Analysis
+      run: |
+        echo "" >> security-audit-report.md
+        echo "### Manual Dependency Analysis" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        
+        echo "#### Known Outdated Dependencies" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        
+        # Check log4net version
+        if grep -q "log4net.*2\.0\.8" CodeOptimization/CodeOptimization.csproj; then
+          echo "🔴 **log4net 2.0.8** - OUTDATED" >> security-audit-report.md
+          echo "   - Current: 2.0.8" >> security-audit-report.md
+          echo "   - Latest: 2.0.15+" >> security-audit-report.md
+          echo "   - Risk: MEDIUM - May contain security vulnerabilities" >> security-audit-report.md
+          echo "   - Fix: Update to latest version" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        fi
+        
+        # Check Newtonsoft.Json version
+        if grep -q "Newtonsoft\.Json.*10\.0\.1" CodeOptimization/CodeOptimization.csproj; then
+          echo "🔴 **Newtonsoft.Json 10.0.1** - OUTDATED" >> security-audit-report.md
+          echo "   - Current: 10.0.1" >> security-audit-report.md
+          echo "   - Latest: 13.0.3+" >> security-audit-report.md
+          echo "   - Risk: HIGH - Known security vulnerabilities" >> security-audit-report.md
+          echo "   - Fix: Update to latest version" >> security-audit-report.md
+          echo "" >> security-audit-report.md
+        fi
+        
+        echo "#### Recommended Actions" >> security-audit-report.md
+        echo "" >> security-audit-report.md
+        echo "1. **Fix Critical Issue:** Replace \`new Random()\` with \`RandomNumberGenerator\`" >> security-audit-report.md
+        echo "2. **Update Dependencies:**" >> security-audit-report.md
+        echo "   - log4net: 2.0.8 → 2.0.15+" >> security-audit-report.md
+        echo "   - Newtonsoft.Json: 10.0.1 → 13.0.3+" >> security-audit-report.md
+        echo "3. **Add Input Validation:** Add null checks to functions like \`IsPalindrome()\`, \`ReverseString()\`" >> security-audit-report.md
+        echo "4. **Implement Error Handling:** Add try-catch blocks for exception handling" >> security-audit-report.md
+        echo "5. **Security Logging:** Add security event logging" >> security-audit-report.md
+
     - name: Upload security audit report
       uses: actions/upload-artifact@v4
       with:
