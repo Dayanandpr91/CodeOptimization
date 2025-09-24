@@ -32,7 +32,8 @@ jobs:
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          path: '~/.nuget/packages'
+          # IMPORTANT: use absolute path, not ~
+          path: '/home/runner/.nuget/packages'
           format: 'ALL'
           out: 'dependency-check-report'
           args: >
