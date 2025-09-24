@@ -11,48 +11,56 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      # Checkout repository
+      # 1️⃣ Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # Setup .NET
+      # 2️⃣ Setup .NET
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      # Restore dependencies
+      # 3️⃣ Restore dependencies
       - name: Restore .NET Dependencies
         run: dotnet restore CodeOptimization/CodeOptimization.sln
 
-      # Build project
-      - name: Build Project
+      # 4️⃣ Build project
+      - name: Build project
         run: dotnet build CodeOptimization/CodeOptimization.sln -c Debug
 
-      # Ensure output folder exists
+      # 5️⃣ List built binaries (debugging)
+      - name: List built binaries
+        run: ls -R CodeOptimization/bin/Debug/net8.0
+
+      # 6️⃣ Prepare output folder
       - name: Prepare output folder
         run: mkdir -p dependency-check-report
 
-      # Run Dependency-Check
+      # 7️⃣ Install Dependency-Check CLI
+      - name: Install Dependency-Check CLI
+        run: |
+          wget https://github.com/jeremylong/DependencyCheck/releases/download/v8.3.3/dependency-check-8.3.3-release.zip
+          unzip dependency-check-8.3.3-release.zip -d dependency-check
+          chmod +x dependency-check/dependency-check/bin/dependency-check.sh
+
+      # 8️⃣ Run Dependency-Check CLI
       - name: Run Dependency-Check
-        uses: dependency-check/Dependency-Check_Action@main
-        with:
-          project: 'CodeOptimization'
-          # Scan the built binaries instead of the raw NuGet cache
-          path: './CodeOptimization/bin/Debug/net8.0'
-          format: 'ALL'
-          out: 'dependency-check-report'
-          args: >
-            --nvdApiKey ${{ secrets.NVD_API_KEY }}
-            --enableExperimental
-            --update
+        run: |
+          ./dependency-check/dependency-check/bin/dependency-check.sh \
+            --scan ./CodeOptimization/bin/Debug/net8.0 \
+            --format ALL \
+            --out dependency-check-report \
+            --nvdApiKey ${{ secrets.NVD_API_KEY }} \
+            --enableExperimental \
+            --update \
             --disableOssIndex
 
-      # Debug: show what was generated
+      # 9️⃣ Show report folder
       - name: Show report folder
         run: ls -R dependency-check-report
 
-      # Upload the report as artifact
+      # 🔟 Upload Dependency-Check Report
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v4
         with:
