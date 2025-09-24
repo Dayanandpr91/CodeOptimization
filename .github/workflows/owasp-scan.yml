@@ -11,57 +11,48 @@ jobs:
     runs-on: ubuntu-24.04
 
     steps:
-      # 1. Checkout your repository
+      # Checkout repository
       - name: Checkout Repository
         uses: actions/checkout@v4
 
-      # 2. Setup .NET
+      # Setup .NET
       - name: Setup .NET
         uses: actions/setup-dotnet@v3
         with:
           dotnet-version: 8.0.x
 
-      # 3. Restore .NET dependencies
+      # Restore dependencies
       - name: Restore .NET Dependencies
         run: dotnet restore CodeOptimization/CodeOptimization.sln
 
-      # 4. List NuGet packages (optional, for debugging)
-      - name: List NuGet Packages
-        run: dotnet list CodeOptimization/CodeOptimization.csproj package
+      # Build project
+      - name: Build Project
+        run: dotnet build CodeOptimization/CodeOptimization.sln -c Debug
 
-      # 5. Copy NuGet packages into workspace so dependency-check can scan them
-      - name: Copy NuGet packages into workspace
-        run: |
-          mkdir -p ./nuget-packages
-          cp -r ~/.nuget/packages/* ./nuget-packages/ || true
-          echo "NuGet packages copied:"
-          ls -R ./nuget-packages | head -50
-
-      # 6. Prepare output folder
+      # Ensure output folder exists
       - name: Prepare output folder
         run: mkdir -p dependency-check-report
 
-      # 7. Run Dependency-Check
+      # Run Dependency-Check
       - name: Run Dependency-Check
         uses: dependency-check/Dependency-Check_Action@main
         with:
           project: 'CodeOptimization'
-          path: './nuget-packages'        # directory to scan
-          format: 'ALL'                   # all report formats
-          out: 'dependency-check-report'  # output folder
+          # Scan the built binaries instead of the raw NuGet cache
+          path: './CodeOptimization/bin/Debug/net8.0'
+          format: 'ALL'
+          out: 'dependency-check-report'
           args: >
             --nvdApiKey ${{ secrets.NVD_API_KEY }}
             --enableExperimental
             --update
             --disableOssIndex
 
-      # 8. Debug: check what files were written
-      - name: Debug report files
-        run: |
-          echo "Contents of dependency-check-report:"
-          ls -R dependency-check-report || true
+      # Debug: show what was generated
+      - name: Show report folder
+        run: ls -R dependency-check-report
 
-      # 9. Upload Dependency-Check report as artifact
+      # Upload the report as artifact
       - name: Upload Dependency-Check Report
         uses: actions/upload-artifact@v4
         with:
